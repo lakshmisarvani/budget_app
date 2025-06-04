@@ -4,6 +4,7 @@ const router = express.Router();
 const jwt=require('jsonwebtoken');
 
 const { register, login,  forgotPassword, resetPassword, googleAuth, googleCallback , logout} = require('../controllers/authController');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Normal auth routes
 router.post('/register', register);
@@ -16,19 +17,36 @@ router.post('/logout', logout);
 router.get('/google', googleAuth); // this will redirect to Google
 router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/login', session: false}), googleCallback);
 // // ...
-router.get('/me', (req, res) => {
+// router.get('/me', (req, res) => {
+//   if (req.user) {
+//     // Only send safe user data
+//     return res.json({
+//       id: req.user._id,
+//       name: req.user.name,
+//       email: req.user.email,
+//       role: req.user.role
+//     });
+//   } else {
+//     res.status(401).json({ message: 'Not authenticated' });
+//   }
+// });
+
+router.get('/me', authMiddleware, (req, res) => {
   if (req.user) {
     // Only send safe user data
     return res.json({
-      id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
-      role: req.user.role
+      id: req.user.id,          // use 'id' if that's what's in your JWT payload
+      name: req.cookies.userName,  // fallback from cookie if needed
+      email: req.cookies.userEmail,
+      role: 'user', // or pull from DB if needed
     });
   } else {
     res.status(401).json({ message: 'Not authenticated' });
   }
 });
+
+
+
 passport.authenticate('google', { failureRedirect: '/login', session: false }),
   (req, res) => {
     // Create your JWT token
