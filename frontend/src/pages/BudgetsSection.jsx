@@ -88,6 +88,7 @@ export default function BudgetsSection() {
     setMessage("");
     try {
       const res = await fetch(API_BASE, {
+        credentials: "include",
         headers: {
           Authorization: "Bearer " + localStorage.getItem("accessToken"),
         },
